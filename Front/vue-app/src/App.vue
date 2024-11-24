@@ -1,30 +1,74 @@
+<!-- App.vue -->
 <template>
-  <nav>
-    <router-link to="/">Home</router-link> |
-    <router-link to="/about">About</router-link>
-  </nav>
-  <router-view/>
+  <div id="app">
+    <nav class="navbar navbar-expand-md navbar-light bg-light">
+      <div class="container-fluid">
+        <a class="navbar-brand" href="/">Recipe</a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#collapsibleNavbar"
+          aria-controls="collapsibleNavbar"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="collapsibleNavbar">
+          <ul class="navbar-nav ms-auto align-items-center">
+            <li v-if="!isLoggedIn" class="nav-item">
+              <router-link to="/auth/loginForm" class="nav-link">로그인</router-link>
+            </li>
+            <li v-if="!isLoggedIn" class="nav-item">
+              <router-link to="/auth/joinForm" class="nav-link">회원가입</router-link>
+            </li>
+            <li v-else class="nav-item">
+              <router-link to="/" class="nav-link" @click="logout">로그아웃</router-link>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+    <router-view />
+    <footer class="footer mt-auto py-3 bg-light text-dark">
+      <div class="container text-center">
+        <span class="text-muted">Create by Sanghak | 📞010-0000-0000</span>
+      </div>
+    </footer>
+  </div>
 </template>
+
+<script>
+import axios from 'axios';
+
+export default {
+  name: 'App',
+  data() {
+    return {
+      isLoggedIn: !!localStorage.getItem('jwt'),
+    };
+  },
+  methods: {
+    logout() {
+      localStorage.removeItem('jwt');
+      delete axios.defaults.headers.common['Authorization'];
+      this.isLoggedIn = false;
+      this.$router.push('/auth/loginForm');
+    },
+  },
+};
+</script>
 
 <style>
 #app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
-nav {
-  padding: 30px;
-}
-
-nav a {
-  font-weight: bold;
-  color: #2c3e50;
-}
-
-nav a.router-link-exact-active {
-  color: #42b983;
+.footer {
+  font-size: 0.8em;
+  color: #6c757d; /* 텍스트 색상 조정 */
 }
 </style>

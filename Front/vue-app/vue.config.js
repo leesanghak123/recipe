@@ -3,7 +3,7 @@ module.exports = defineConfig({
   transpileDependencies: true
 })
 
-/* vue 파일과 연동이 안되네 (vue 에서 axios 통신 설정)
+/* vue 에서 axios 통신 설정(실패: vue 파일과 연동이 안되네)
 const target = 'http://localhost:8002'
 module.exports - {
   devServer: {
