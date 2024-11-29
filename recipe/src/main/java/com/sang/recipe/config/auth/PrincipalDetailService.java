@@ -27,22 +27,11 @@ public class PrincipalDetailService implements UserDetailsService{
 	// 이걸 override해서 안만들어주면 PrincipalDetail에서 생성자를 못만들어줘서
 	// password가 콘솔창으로 설정된다
 	@Override
-	public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-//		User principal = userRepository.findByUsername(username)
-//				.orElseThrow(()->{
-//					return new UsernameNotFoundException("해당 사용자를 찾을 수 없습니다. : " + username);
-//				});
-//		return new PrincipalDetail(principal);  // 시큐리티 세션에 유저 정보가 저장, PrincipalDetail에서 생성자를 만들어 Detil 타입으로 반환했다
-		// 콘솔에 유저명 출력
-	    System.out.println("Trying to load user by username: " + username);
-		
-		User principal = userRepository.findByUsername(username);
-		
-		if(principal != null) {
-			
-			return new PrincipalDetail(principal);
-		}
-		
-		return null;
-	}
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        // Optional을 사용하여 사용자 정보 가져오기
+        User principal = userRepository.findByUsername(username)
+            .orElseThrow(() -> new UsernameNotFoundException("해당 사용자를 찾을 수 없습니다. : " + username));
+
+        return new PrincipalDetail(principal);  // PrincipalDetail로 반환
+    }
 }

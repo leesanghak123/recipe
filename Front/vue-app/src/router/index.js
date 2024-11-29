@@ -3,11 +3,13 @@ import Board from '../views/Board.vue'
 import Login from '../views/Login.vue'
 import Join from '../views/Join.vue'
 import axios from 'axios';
+import BoardWrite from '../views/BoardWrite.vue'
 
-// 페이지 경로 상수
+// 페이지 경로 상수 (페이지 URL)
 const LOGIN_PATH = '/auth/loginForm';
 const JOIN_PATH = '/auth/joinForm';
 const BOARD_PATH = '/';
+const BOARD_WRITE_PATH = '/board/write'
 
 // JWT 만료 여부 확인
 function isTokenExpired(token) {
@@ -29,6 +31,12 @@ const routes = [
     name: 'board',    // 라우트 이름
     component: Board, // 컴포넌트
     meta: { requiresAuth: true }  // 인증이 필요
+  },
+  {
+    path: BOARD_WRITE_PATH,
+    name: 'boardWrite',
+    component: BoardWrite,
+    meta: { requiresAuth: true }
   },
   {
     path: LOGIN_PATH,
