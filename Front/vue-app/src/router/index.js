@@ -4,12 +4,16 @@ import Login from '../views/Login.vue'
 import Join from '../views/Join.vue'
 import axios from 'axios';
 import BoardWrite from '../views/BoardWrite.vue'
+import BoardDetail from '../views/BoardDetail.vue'
+import BoardUpdate from '../views/BoardUpdate.vue'
 
 // 페이지 경로 상수 (페이지 URL)
 const LOGIN_PATH = '/auth/loginForm';
 const JOIN_PATH = '/auth/joinForm';
 const BOARD_PATH = '/';
 const BOARD_WRITE_PATH = '/board/write'
+const BOARD_DETAIL_PATH = '/board/detail/:id' // 동적 경로
+const BOARD_UPDATE_PATH = '/board/update/:id'
 
 // JWT 만료 여부 확인
 function isTokenExpired(token) {
@@ -36,6 +40,18 @@ const routes = [
     path: BOARD_WRITE_PATH,
     name: 'boardWrite',
     component: BoardWrite,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: BOARD_DETAIL_PATH,
+    name: 'boardDetial',
+    component: BoardDetail,
+    meta: {requiresAuth: true }
+  },
+  {
+    path: BOARD_UPDATE_PATH,
+    name: 'boardUpdate',
+    component: BoardUpdate,
     meta: { requiresAuth: true }
   },
   {

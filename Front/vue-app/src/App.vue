@@ -1,4 +1,3 @@
-<!-- App.vue -->
 <template>
   <div id="app">
     <nav class="navbar navbar-expand-md navbar-light bg-light">
@@ -24,6 +23,9 @@
               <router-link to="/auth/joinForm" class="nav-link">회원가입</router-link>
             </li>
             <li v-else class="nav-item">
+              <span class="nav-link">안녕하세요, {{ username }}님</span>
+            </li>
+            <li v-if="isLoggedIn" class="nav-item">
               <router-link to="/" class="nav-link" @click="logout">로그아웃</router-link>
             </li>
           </ul>
@@ -40,21 +42,37 @@
 </template>
 
 <script>
-import axios from 'axios';
+import axios from "axios";
 
 export default {
-  name: 'App',
+  name: "App",
   data() {
     return {
-      isLoggedIn: !!localStorage.getItem('jwt'),
+      isLoggedIn: !!localStorage.getItem("jwt"), // 로그인 상태 여부
+      username: "", // 사용자 이름
     };
+  },
+  mounted() {
+    this.decodeToken(); // 컴포넌트가 마운트되면 JWT를 디코딩
   },
   methods: {
     logout() {
-      localStorage.removeItem('jwt');
-      delete axios.defaults.headers.common['Authorization'];
+      localStorage.removeItem("jwt");
+      delete axios.defaults.headers.common["Authorization"];
       this.isLoggedIn = false;
-      this.$router.push('/auth/loginForm');
+      this.username = ""; // 로그아웃 시 사용자 이름 초기화
+      this.$router.push("/auth/loginForm");
+    },
+    decodeToken() {
+      const token = localStorage.getItem("jwt");
+      if (token) {
+        try {
+          const payload = JSON.parse(atob(token.split(".")[1])); // JWT의 payload 디코딩
+          this.username = payload.username; // username 필드 추출
+        } catch (error) {
+          console.error("JWT 디코딩 실패:", error);
+        }
+      }
     },
   },
 };

@@ -11,6 +11,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.Sort;
 
+import com.sang.recipe.dto.BoardDetailDto;
 import com.sang.recipe.dto.BoardFindDto;
 import com.sang.recipe.dto.BoardWriteDto;
 import com.sang.recipe.model.Board;
@@ -37,6 +38,26 @@ public class BoardController {
         Page<BoardFindDto> boards = boardService.글목록(pageable);
         return ResponseEntity.ok(boards);
     }
+    
+    // 글 상세보기
+    @GetMapping("/{id}")
+    public ResponseEntity<?> Detali(@PathVariable int id) {
+    	try {
+            // Service 계층에서 ID로 게시글 상세 정보 조회
+            BoardDetailDto boardDetail = boardService.글상세보기(id);
+
+            // 게시글이 존재하지 않을 경우
+            if (boardDetail == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("해당 게시글을 찾을 수 없습니다.");
+            }
+
+            // 성공 시 게시글 상세 정보를 반환
+            return ResponseEntity.ok(boardDetail);
+        } catch (Exception e) {
+            // 예외 발생 시 내부 서버 에러 반환
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("게시글 상세 정보를 가져오는 중 문제가 발생했습니다.");
+        }	
+    }
 
     // 글 작성
     @PostMapping("/write")
@@ -48,4 +69,36 @@ public class BoardController {
         boardService.글쓰기(boardWriteDto, username);
         return ResponseEntity.status(HttpStatus.CREATED).body("글 작성 완료");
     }
+    
+    // 글 수정
+    @PatchMapping("/update/{id}")
+    public ResponseEntity<?> update(@PathVariable int id, @Valid @RequestBody BoardWriteDto boardWriteDto, @AuthenticationPrincipal PrincipalDetail principal) {
+        try {
+            String username = principal.getUsername();
+
+            // 게시글 수정 처리
+            boardService.글수정(id, boardWriteDto, username);
+
+            return ResponseEntity.status(HttpStatus.OK).body("글 수정 완료");
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("글 수정 중 오류가 발생했습니다.");
+        }
+    }
+    
+    // 글 삭제
+    @DeleteMapping("/delete/{id}")
+    public ResponseEntity<?> delete(@PathVariable int id, @AuthenticationPrincipal PrincipalDetail principal) {
+        try {
+            String username = principal.getUsername();
+
+            boardService.글삭제(id, username);
+
+            return ResponseEntity.status(HttpStatus.OK).body("글 삭제 완료");
+
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("글 삭제 중 오류가 발생했습니다.");
+        }
+    }
+    
 }

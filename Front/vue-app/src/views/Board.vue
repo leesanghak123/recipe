@@ -19,13 +19,14 @@
         </tr>
       </thead>
       <tbody>
-        <!-- boards의 배열 요소를 board라는 변수로 순회하며 board.id를 기준으로 tr 생성 -->
-        <tr v-for="board in boards" :key="board.id">
+        <!-- boards 배열을 순회하면서 각 게시글을 클릭할 수 있는 행으로 표시 -->
+        <!-- 각 행을 클릭 시 goToDetailPage 함수 작동 -->
+        <tr v-for="board in boards" :key="board.id" @click="goToDetailPage(board.id)" class="clickable-row">
           <td>{{ board.id }}</td>
           <td>{{ board.title.substring(0, 10) }}</td>
           <td>{{ board.username.substring(0, 8) }}</td>
           <td>{{ formatDate(board.createDate) }}</td>
-          <td>{{ board.reply ? board.reply.length : 0 }}</td> <!-- 댓글수 -->
+          <td>{{ board.replyCount }}</td> <!-- 댓글수 -->
           <td>{{ board.count }}</td> <!-- 조회수 -->
           <td>{{ board.likes }}</td> <!-- 추천수 -->
         </tr>
@@ -71,7 +72,7 @@ export default {
         }
 
         // JWT 토큰을 포함하여 요청
-        const response = await axios.get(`http://localhost:8002/api/boards`, {
+        const response = await axios.get(`http://localhost:8002/api/boards?page=${page - 1}`, {
           headers: {
             Authorization: `Bearer ${token}`, // 토큰 추가
           },
@@ -102,6 +103,11 @@ export default {
     // 글쓰기 페이지로 이동
     goToWritePage() {
       this.$router.push('/board/write');
+    },
+
+    // 상세보기 페이지로 이동
+    goToDetailPage(boardId) {
+      this.$router.push(`/board/detail/${boardId}`);
     },
   },
   mounted() {
@@ -144,7 +150,7 @@ export default {
 }
 
 .board-table th {
-  background-color: #6c757d; /* 연한 회색 */
+  background-color: #6c757d;
   color: white;
   font-weight: bold;
   border: none;
@@ -163,6 +169,16 @@ export default {
   background-color: #e9ecef;
 }
 
+/* 클릭 가능한 테이블 행 스타일 */
+.clickable-row {
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.clickable-row:hover {
+  background-color: #f1f1f1;
+}
+
 /* 페이지네이션 스타일 */
 .pagination {
   display: flex;
@@ -179,7 +195,7 @@ export default {
   display: block;
   padding: 8px 12px;
   margin: 0 3px;
-  color: #6c757d; /* 연한 회색 */
+  color: #6c757d;
   background-color: #fff;
   border: 1px solid #ddd;
   border-radius: 4px;
@@ -188,7 +204,7 @@ export default {
 }
 
 .page-link:hover {
-  background-color: #6c757d; /* 연한 회색 */
+  background-color: #6c757d;
   color: #fff;
 }
 
@@ -199,7 +215,7 @@ export default {
 }
 
 .page-item.active .page-link {
-  background-color: #6c757d; /* 연한 회색 */
+  background-color: #6c757d;
   color: white;
   border-color: #6c757d;
 }
@@ -212,9 +228,9 @@ export default {
 }
 
 .btn-write {
-  background-color: #f3f3f3; /* 테이블 tr과 동일한 색상 */
-  color: #555; /* 글자 색상 */
-  border: 1px solid #ddd; /* 테이블 경계선과 동일한 색상 */
+  background-color: #f3f3f3;
+  color: #555;
+  border: 1px solid #ddd;
   padding: 10px 20px;
   border-radius: 5px;
   cursor: pointer;
@@ -223,10 +239,10 @@ export default {
 }
 
 .btn-write:hover {
-  background-color: #e9ecef; /* 호버시 색상 변경 */
+  background-color: #e9ecef;
 }
 
 .btn-write:focus {
-  outline: none; /* 포커스 시 나타나는 기본 테두리 없애기 */
+  outline: none;
 }
 </style>
