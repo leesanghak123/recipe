@@ -16,7 +16,6 @@ import com.sang.recipe.dto.BoardFindDto;
 import com.sang.recipe.dto.BoardWriteDto;
 import com.sang.recipe.model.Board;
 import com.sang.recipe.service.BoardService;
-import com.sang.recipe.config.JWTUtil;
 import com.sang.recipe.config.auth.PrincipalDetail;
 
 import jakarta.validation.Valid;
@@ -27,9 +26,6 @@ public class BoardController {
 
     @Autowired
     private BoardService boardService;
-
-    @Autowired
-    private JWTUtil jwtUtil;
 
     // 글 목록 조회
     @GetMapping

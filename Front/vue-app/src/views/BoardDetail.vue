@@ -19,7 +19,29 @@
     </div>
 
     <div class="button-group">
-      <button @click="goToList" class="btn btn-list">목록</button>
+      <button @click="goToList" class="btn btn-list">목록으로</button>
+    </div>
+
+    <!-- 댓글 섹션 -->
+    <div class="comment-section">
+      <h3>댓글</h3>
+
+      <!-- 댓글 입력 -->
+      <div class="comment-input">
+        <textarea v-model="newReply" placeholder="댓글을 입력하세요"></textarea>
+        <button @click="postComment">등록</button>
+      </div>
+
+      <!-- 댓글 목록 -->
+      <div class="comment-list">
+        <div v-for="comment in board.reply" :key="comment.id" class="comment-item">
+          <p class="comment-content">{{ comment.content }}</p>
+          <p class="comment-meta">
+            {{ comment.user.username }} · {{ formatDate(comment.createDate) }}
+            <span v-if="isCommentAuthor(comment)" @click="deleteComment(comment.id)" class="delete-btn">삭제</span>
+          </p>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -31,10 +53,12 @@ export default {
   data() {
     return {
       board: {}, // 게시글 데이터
-      isAuthor: false, // 작성자인지 여부
+      newReply: "", // 새 댓글 입력 필드
+      isAuthor: false, // 게시글 작성자인지 여부
     };
   },
   methods: {
+    // 게시글 데이터 가져오기 (댓글 포함)
     async fetchBoard() {
       try {
         const token = localStorage.getItem("jwt");
@@ -48,12 +72,12 @@ export default {
         this.board = response.data;
 
         // JWT 디코딩하여 작성자인지 확인
-        const parts = token.split("."); // const: 변하지않는 값(상수)를 넣는 자료형, 여러 값 넣기 가능(배열)
-        if (parts.length === 3) { // parts의 길이가 3인지 확인, ===: 값과 타입까지 비교, == 타입은 달라도 값만 비교, "3"인 경우를 방지
+        const parts = token.split("."); // const: 변하지 않는 값(상수)를 넣는 자료형, 여러 값 넣기 가능(배열)
+        if (parts.length === 3) { // parts의 길이가 3인지 확인, ===: 값과 타입까지 비교, ==: 타입은 달라도 값만 비교, "3"인 경우를 방지 
           // JWT 페이로드 디코딩
           const payload = JSON.parse(atob(parts[1])); // atob: base64 디코딩, JSON.parse: 문자열을 json 객체로 변환
           const currentUser = payload.username; // 'username' 필드 추출
-          
+
           // 작성자 확인
           this.isAuthor = this.board.username === currentUser;
         } else {
@@ -64,11 +88,66 @@ export default {
       }
     },
 
+    // 댓글 작성
+    async postComment() {
+      if (!this.newReply.trim()) { // null이면, trim 공백을 제거(띄어쓰기만 한 경우)
+        alert("댓글을 입력하세요.");
+        return;
+      }
+
+      try {
+        const token = localStorage.getItem("jwt");
+        await axios.post(
+          `http://localhost:8002/api/reply/write/${this.$route.params.id}`,
+          {
+            content: this.newReply,
+          },
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        this.newReply = ""; // 입력 초기화
+        this.fetchBoard(); // 댓글 포함된 게시글 데이터 다시 불러오기, 데이터 갱신
+      } catch (error) {
+        console.error("댓글 작성 실패:", error);
+      }
+    },
+
+    // 댓글 삭제
+    async deleteComment(commentId) {
+      if (confirm("댓글을 삭제하시겠습니까?")) {
+        try {
+          const token = localStorage.getItem("jwt");
+          await axios.delete(`http://localhost:8002/api/reply/delete/${commentId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+
+          this.fetchBoard(); // 댓글 포함된 게시글 데이터 다시 불러오기
+        } catch (error) {
+          console.error("댓글 삭제 실패:", error);
+        }
+      }
+    },
+
+    // 댓글 작성자인지 확인
+    isCommentAuthor(comment) {
+      const token = localStorage.getItem("jwt");
+      const parts = token.split(".");
+      if (parts.length === 3) {
+        const payload = JSON.parse(atob(parts[1]));
+        return comment.user.username === payload.username;
+      }
+      return false;
+    },
+
+    // 날짜 포맷
     formatDate(dateString) {
       const options = { year: "numeric", month: "2-digit", day: "2-digit" };
       return new Date(dateString).toLocaleDateString("ko-KR", options);
     },
 
+    // 페이지 이동
     goToList() {
       this.$router.push("/"); // 목록 페이지로 이동
     },
@@ -94,7 +173,7 @@ export default {
     },
   },
   mounted() {
-    this.fetchBoard(); // 게시글 데이터와 작성자 정보를 불러옴
+    this.fetchBoard(); // 게시글 데이터와 댓글 포함된 게시글 데이터 불러오기
   },
 };
 </script>
@@ -185,32 +264,89 @@ button.btn-list:hover {
 .badge {
   padding: 6px 12px;
   font-size: 12px;
-  font-weight: bold;
-  border-radius: 12px;
+  background-color: #007bff;
+  color: white;
+  border-radius: 4px;
   cursor: pointer;
-  display: inline-block;
-  transition: background-color 0.3s ease;
 }
 
 .badge:hover {
-  opacity: 0.8;
-}
-
-.badge-edit {
-  background-color: #6c757d; /* 중립적인 회색 */
-  color: white;
-}
-
-.badge-edit:hover {
-  background-color: #5a6268; /* 어두운 회색 */
+  background-color: #0056b3;
 }
 
 .badge-delete {
-  background-color: #dc3545; /* 경고 빨간색 */
-  color: white;
+  background-color: #dc3545;
 }
 
 .badge-delete:hover {
-  background-color: #c82333; /* 어두운 빨간색 */
+  background-color: #c82333;
+}
+
+/* 댓글 섹션 스타일 */
+.comment-section {
+  margin-top: 30px;
+}
+
+.comment-section h3 {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+}
+
+.comment-input {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+.comment-input textarea {
+  width: 100%;
+  height: 80px;
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  resize: none;
+}
+
+.comment-input button {
+  align-self: flex-end;
+  padding: 8px 16px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.comment-input button:hover {
+  background-color: #0056b3;
+}
+
+.comment-list {
+  margin-top: 20px;
+}
+
+.comment-item {
+  padding: 10px;
+  border-bottom: 1px solid #eee;
+}
+
+.comment-content {
+  margin: 0;
+}
+
+.comment-meta {
+  font-size: 0.8rem;
+  color: #777;
+}
+
+.delete-btn {
+  margin-left: 10px;
+  color: #dc3545;
+  cursor: pointer;
+}
+
+.delete-btn:hover {
+  text-decoration: underline;
 }
 </style>
