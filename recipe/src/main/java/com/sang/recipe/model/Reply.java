@@ -44,7 +44,7 @@ public class Reply {
 	private Board board;
 	
 	@OneToMany(mappedBy = "reply", fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
-	@JsonIgnoreProperties({"reply", "user"})
+	@JsonIgnoreProperties({"reply"})
 	private List<ReplyReply> replyreply;
 	
 	private Timestamp createDate;

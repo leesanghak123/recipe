@@ -28,18 +28,56 @@
 
       <!-- 댓글 입력 -->
       <div class="comment-input">
+        <!-- v-model에 넣으면 자동으로 data에 값이 바인딩 -->
         <textarea v-model="newReply" placeholder="댓글을 입력하세요"></textarea>
         <button @click="postComment">등록</button>
       </div>
 
-      <!-- 댓글 목록 -->
+      <!-- 댓글 리스트 -->
       <div class="comment-list">
-        <div v-for="comment in board.reply" :key="comment.id" class="comment-item">
+        <div v-for="comment in board.reply" :key="comment.id" class="comment-item"> <!-- key가 없으면 어떤 걸 없앴는지 파악 못함 -->
           <p class="comment-content">{{ comment.content }}</p>
           <p class="comment-meta">
             {{ comment.user.username }} · {{ formatDate(comment.createDate) }}
-            <span v-if="isCommentAuthor(comment)" @click="deleteComment(comment.id)" class="delete-btn">삭제</span>
+            <!-- 댓글 작성자인지 확인 -->
+            <span
+              v-if="isCommentAuthor(comment)"
+              @click="deleteComment(comment.id)"
+              class="delete-btn"
+            >
+              삭제
+            </span>
+            <span @click="toggleReplyInput(comment.id)" class="reply-btn">답글</span>
           </p>
+
+          <!-- 대댓글 입력창 -->
+          <div v-if="activeReplyInput === comment.id" class="reply-input">
+            <textarea
+              v-model="newSubReply"
+              placeholder="대댓글을 입력하세요"
+            ></textarea>
+            <button @click="postSubReply(comment.id)">등록</button>
+          </div>
+
+          <!-- 대댓글 표시 -->
+          <div
+            v-for="subReply in comment.replyreply || []"
+            :key="subReply.id"
+            class="reply-comment-item"
+          >
+            <p class="comment-content">{{ subReply.content }}</p>
+            <p class="comment-meta">
+              {{ subReply.user.username }} · {{ formatDate(subReply.createDate) }}
+              <!-- 대댓글을 작성한 경우 delete에 true를 넘겨준다 -->
+              <span
+                v-if="isCommentAuthor(subReply)"
+                @click="deleteComment(subReply.id, true)"
+                class="delete-btn"
+              >
+                삭제
+              </span>
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -55,6 +93,8 @@ export default {
       board: {}, // 게시글 데이터
       newReply: "", // 새 댓글 입력 필드
       isAuthor: false, // 게시글 작성자인지 여부
+      newSubReply: "", // 새 대댓글 입력 필드 (문자열로 수정)
+      activeReplyInput: null, // 활성화된 대댓글 입력창 ID
     };
   },
   methods: {
@@ -63,7 +103,7 @@ export default {
       try {
         const token = localStorage.getItem("jwt");
         const response = await axios.get(
-          `http://localhost:8002/api/boards/${this.$route.params.id}`, // 백틱, $route.params.id: 현재 Detail의 url에 있는 id를 넣고 서버로 호출
+          `http://localhost:8002/api/boards/${this.$route.params.id}`, // 백틱, 현재 URL에 있는 id를 사용하여 서버 호출
           {
             headers: { Authorization: `Bearer ${token}` },
           }
@@ -90,7 +130,7 @@ export default {
 
     // 댓글 작성
     async postComment() {
-      if (!this.newReply.trim()) { // null이면, trim 공백을 제거(띄어쓰기만 한 경우)
+      if (!this.newReply.trim()) {
         alert("댓글을 입력하세요.");
         return;
       }
@@ -99,35 +139,67 @@ export default {
         const token = localStorage.getItem("jwt");
         await axios.post(
           `http://localhost:8002/api/reply/write/${this.$route.params.id}`,
-          {
-            content: this.newReply,
-          },
+          { content: this.newReply },
           {
             headers: { Authorization: `Bearer ${token}` },
           }
         );
 
         this.newReply = ""; // 입력 초기화
-        this.fetchBoard(); // 댓글 포함된 게시글 데이터 다시 불러오기, 데이터 갱신
+        this.fetchBoard(); // 댓글 포함된 게시글 데이터 다시 불러오기
       } catch (error) {
         console.error("댓글 작성 실패:", error);
       }
     },
 
     // 댓글 삭제
-    async deleteComment(commentId) {
-      if (confirm("댓글을 삭제하시겠습니까?")) {
+    async deleteComment(commentId, isSubReply = false) {
+      if (confirm("삭제하시겠습니까?")) {
         try {
           const token = localStorage.getItem("jwt");
-          await axios.delete(`http://localhost:8002/api/reply/delete/${commentId}`, {
+          const url = isSubReply
+            ? `http://localhost:8002/api/replyreply/delete/${commentId}`
+            : `http://localhost:8002/api/reply/delete/${commentId}`;
+
+          await axios.delete(url, {
             headers: { Authorization: `Bearer ${token}` },
           });
 
           this.fetchBoard(); // 댓글 포함된 게시글 데이터 다시 불러오기
         } catch (error) {
-          console.error("댓글 삭제 실패:", error);
+          console.error("삭제 실패:", error);
         }
       }
+    },
+
+    // 대댓글 작성
+    async postSubReply(commentId) {
+      if (!this.newSubReply.trim()) { // 공백 제거 후 확인
+        alert("대댓글을 입력하세요.");
+        return;
+      }
+
+      try {
+        const token = localStorage.getItem("jwt");
+        await axios.post(
+          `http://localhost:8002/api/replyreply/write/${commentId}`,
+          { content: this.newSubReply },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        this.newSubReply = ""; // 대댓글 입력 초기화
+        this.activeReplyInput = null; // 입력창 닫기
+        this.fetchBoard(); // 댓글 데이터 새로고침
+      } catch (error) {
+        console.error("대댓글 작성 실패:", error);
+      }
+    },
+
+    // 대댓글 입력창 토글
+    toggleReplyInput(commentId) { // 댓글 ID
+      // 현재 열려있는 입력창과 동일하면 닫음, 다르면 연다
+      // 답글 버튼을 누르면 activeReplyInput에 commentId가 들어가고 이를 통한 비교를 한다 
+      this.activeReplyInput = this.activeReplyInput === commentId ? null : commentId;
     },
 
     // 댓글 작성자인지 확인
@@ -347,6 +419,53 @@ button.btn-list:hover {
 }
 
 .delete-btn:hover {
+  text-decoration: underline;
+}
+
+/* 대댓글 스타일 */
+.reply-comment-item {
+  margin-left: 20px;
+  padding: 8px;
+  border-left: 2px solid #ddd;
+}
+
+.reply-input {
+  margin-left: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.reply-input textarea {
+  width: 100%;
+  height: 60px;
+  margin-bottom: 10px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  resize: none;
+}
+
+.reply-input button {
+  align-self: flex-end;
+  padding: 6px 12px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.reply-input button:hover {
+  background-color: #0056b3;
+}
+
+.reply-btn {
+  margin-left: 10px;
+  color: #007bff;
+  cursor: pointer;
+}
+
+.reply-btn:hover {
   text-decoration: underline;
 }
 </style>
