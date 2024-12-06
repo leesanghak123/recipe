@@ -1,5 +1,8 @@
 package com.sang.recipe.controller;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -37,10 +40,11 @@ public class BoardController {
     
     // 글 상세보기
     @GetMapping("/{id}")
-    public ResponseEntity<?> Detali(@PathVariable int id) {
+    public ResponseEntity<?> Detali(@PathVariable int id, @AuthenticationPrincipal PrincipalDetail principal) {
     	try {
+    		String username = principal.getUsername();
             // Service 계층에서 ID로 게시글 상세 정보 조회
-            BoardDetailDto boardDetail = boardService.글상세보기(id);
+            BoardDetailDto boardDetail = boardService.글상세보기(id, username);
 
             // 게시글이 존재하지 않을 경우
             if (boardDetail == null) {
@@ -97,4 +101,29 @@ public class BoardController {
         }
     }
     
+    // 추천수 처리
+    @PostMapping("/{id}/like")
+    public ResponseEntity<?> handleLike(@PathVariable int id, @AuthenticationPrincipal PrincipalDetail principal) {
+        try {
+            String username = principal.getUsername();
+
+            // 좋아요 상태 변경 처리
+            boolean isLiked = boardService.추천여부(id, username);
+            
+            int currentLikes = boardService.좋아요수(id);
+
+            // 응답 데이터 설정
+            Map<String, Object> response = new HashMap<>();
+            response.put("isLiked", isLiked);
+            response.put("likes", currentLikes);
+
+            return ResponseEntity.status(HttpStatus.OK).body(response);
+        } catch (IllegalArgumentException e) {
+            // 잘못된 요청 처리
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
+        } catch (Exception e) {
+            // 서버 오류 처리
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("추천수 처리 중 오류가 발생했습니다.");
+        }
+    }
 }

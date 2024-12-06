@@ -21,6 +21,6 @@ public class BoardDetailDto {
 	private String username; // User의 username만
 	private Timestamp createDate;
 	private List<Reply> reply;
-	private int count;
 	private int likes;
+	private boolean isLiked; // 추천(좋아요) 여부
 }

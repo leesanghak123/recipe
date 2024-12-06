@@ -5,8 +5,13 @@
     <div class="board-detail-meta">
       <p>작성자: {{ board.username }}</p>
       <p>작성일: {{ formatDate(board.createDate) }}</p>
-      <p>조회수: {{ board.count }}</p>
       <p>추천수: {{ board.likes }}</p>
+      
+      <button @click="likePost">
+        <span v-if="isLiked">❤️</span>
+        <span v-else>🤍</span>
+        {{ board.likes }}
+      </button>
 
       <div v-if="isAuthor" class="author-badges">
         <span @click="editPost" class="badge badge-edit">수정</span>
@@ -95,6 +100,7 @@ export default {
       isAuthor: false, // 게시글 작성자인지 여부
       newSubReply: "", // 새 대댓글 입력 필드 (문자열로 수정)
       activeReplyInput: null, // 활성화된 대댓글 입력창 ID
+      isLiked: false,
     };
   },
   methods: {
@@ -110,6 +116,9 @@ export default {
         );
 
         this.board = response.data;
+        this.isLiked = response.data.liked; // 좋아요 여부 확인
+        console.log(response.data);
+        //console.log(response.data.liked);
 
         // JWT 디코딩하여 작성자인지 확인
         const parts = token.split("."); // const: 변하지 않는 값(상수)를 넣는 자료형, 여러 값 넣기 가능(배열)
@@ -125,6 +134,31 @@ export default {
         }
       } catch (error) {
         console.error("게시글 불러오기 실패:", error);
+      }
+    },
+
+    // 좋아요 처리
+    async likePost() {
+      try {
+        const token = localStorage.getItem("jwt");
+        const response = await axios.post(
+          `http://localhost:8002/api/boards/${this.board.id}/like`,
+          {}, // Body 데이터, Post 형식을 맞추기 위해 빈값을 보냄
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        // 서버에서 반환된 새로운 좋아요 수와 좋아요 여부를 업데이트
+        // 자동으로 좋아요 부분만 업데이트
+        const { isLiked, likes } = response.data;
+        this.isLiked = isLiked; // 좋아요 여부
+        this.board.likes = likes; // 좋아요 수
+
+        console.log('좋아요 상태:', this.isLiked);
+
+      } catch (error) {
+        console.error("좋아요 처리 실패:", error);
       }
     },
 
