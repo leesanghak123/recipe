@@ -26,6 +26,9 @@
               <span class="nav-link">안녕하세요, {{ username }}님</span>
             </li>
             <li v-if="isLoggedIn" class="nav-item">
+              <router-link to="/ai/service" class="nav-link">요리 AI</router-link>
+            </li>
+            <li v-if="isLoggedIn" class="nav-item">
               <router-link to="/" class="nav-link" @click="logout">로그아웃</router-link>
             </li>
           </ul>
