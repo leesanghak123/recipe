@@ -7,6 +7,7 @@ import BoardWrite from '../views/BoardWrite.vue'
 import BoardDetail from '../views/BoardDetail.vue'
 import BoardUpdate from '../views/BoardUpdate.vue'
 import AiService from '../views/AiService.vue';
+import Map from '../views/Map.vue'
 
 // 페이지 경로 상수 (페이지 URL)
 const LOGIN_PATH = '/auth/loginForm';
@@ -16,6 +17,7 @@ const BOARD_WRITE_PATH = '/board/write'
 const BOARD_DETAIL_PATH = '/board/detail/:id' // 동적 경로
 const BOARD_UPDATE_PATH = '/board/update/:id'
 const AI_SERVICE_PATH = '/ai/service'
+const MAP_PATH = '/map'
 
 // JWT 만료 여부 확인
 function isTokenExpired(token) {
@@ -70,6 +72,12 @@ const routes = [
     path: AI_SERVICE_PATH,
     name: 'AiService',
     component: AiService,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: MAP_PATH,
+    name: 'Map',
+    component: Map,
     meta: { requiresAuth: true }
   }
 ]

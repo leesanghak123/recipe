@@ -29,6 +29,9 @@
               <router-link to="/ai/service" class="nav-link">요리 AI</router-link>
             </li>
             <li v-if="isLoggedIn" class="nav-item">
+              <router-link to="/map" class="nav-link">Market Map</router-link>
+            </li>
+            <li v-if="isLoggedIn" class="nav-item">
               <router-link to="/" class="nav-link" @click="logout">로그아웃</router-link>
             </li>
           </ul>
