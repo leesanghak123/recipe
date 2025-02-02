@@ -3,6 +3,8 @@ package com.sang.recipe.model;
 import java.sql.Timestamp;
 import java.util.List;
 
+import org.hibernate.annotations.BatchSize;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import jakarta.persistence.CascadeType;
@@ -35,16 +37,17 @@ public class Reply {
 	@Column(nullable = false, length = 500)
 	private String content;
 	
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "userId")
 	private User user;
 	
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "boardId")
 	private Board board;
 	
-	@OneToMany(mappedBy = "reply", fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
+	@OneToMany(mappedBy = "reply", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
 	@JsonIgnoreProperties({"reply"})
+	@BatchSize(size = 100)
 	private List<ReplyReply> replyreply;
 	
 	private Timestamp createDate;

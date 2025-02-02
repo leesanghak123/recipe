@@ -158,7 +158,12 @@ export default {
         console.log('좋아요 상태:', this.isLiked);
 
       } catch (error) {
-        console.error("좋아요 처리 실패:", error);
+        if (error.response && error.response.status === 409) {
+                alert('이미 다른 사용자가 댓글을 수정했습니다. 다시 시도해주세요.');
+            } else {
+                console.error('댓글 작성 오류:', error);
+                alert('댓글 작성 중 오류가 발생했습니다. 다시 시도해주세요.');
+            }
       }
     },
 

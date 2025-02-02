@@ -42,6 +42,10 @@ public class ReplyService {
 		reply.setCreateDate(Timestamp.valueOf(LocalDateTime.now()));
 		
 		replyRepository.save(reply);
+		
+		// 댓글 개수 증가
+		board.setReplyCnt(board.getReplyCnt() + 1);
+		boardRepository.save(board);
 	}
 	
 	@Transactional
@@ -54,5 +58,11 @@ public class ReplyService {
 		}
 		
 		replyRepository.delete(reply);
+		
+		// 댓글 개수 감소 (최소 0 유지)
+		Board board = reply.getBoard();
+		
+        board.setReplyCnt(Math.max(0, board.getReplyCnt() - 1)); // 최솟값 0
+        boardRepository.save(board);
 	}
 }

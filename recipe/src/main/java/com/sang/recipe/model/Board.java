@@ -18,6 +18,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
+import jakarta.persistence.Version;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -46,15 +47,20 @@ public class Board {
 	
 	private int likes;
 	
-	@ManyToOne(fetch = FetchType.EAGER)
+	private int replyCnt;
+	
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "userId") // 칼럼 이름
 	private User user;
 	
-	@OneToMany(mappedBy = "board", fetch = FetchType.EAGER, cascade = CascadeType.REMOVE)
+	@OneToMany(mappedBy = "board", fetch = FetchType.LAZY, cascade = CascadeType.REMOVE)
 	@JsonIgnoreProperties({"board", "user"})
 	@OrderBy("id desc")
 	private List<Reply> reply;
 	
 	@CreationTimestamp
 	private Timestamp createDate;
+	
+	@Version
+	private Long version;
 }

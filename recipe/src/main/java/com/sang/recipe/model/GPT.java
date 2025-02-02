@@ -40,7 +40,7 @@ public class GPT {
 	@Column(length = 50)
 	private String source;
 	
-	@ManyToOne(fetch = FetchType.EAGER)
+	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "userId")
 	private User user;
 }

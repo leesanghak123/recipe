@@ -8,9 +8,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.sang.recipe.dto.ReplyReplyWriteDto;
+import com.sang.recipe.model.Board;
 import com.sang.recipe.model.Reply;
 import com.sang.recipe.model.ReplyReply;
 import com.sang.recipe.model.User;
+import com.sang.recipe.repository.BoardRepository;
 import com.sang.recipe.repository.ReplyReplyRepository;
 import com.sang.recipe.repository.ReplyRepository;
 import com.sang.recipe.repository.UserRepository;
@@ -27,6 +29,9 @@ public class ReplyReplyService {
 	@Autowired
 	private ReplyReplyRepository replyReplyRepository;
 	
+	@Autowired
+	private BoardRepository boardRepository;
+	
 	@Transactional
 	public void 글쓰기(int replyId, ReplyReplyWriteDto replyReplyWriteDto, String username) {
 		User user = userRepository.findByUsername(username)
@@ -35,6 +40,8 @@ public class ReplyReplyService {
 		Reply reply = replyRepository.findById(replyId)
 				.orElseThrow(() -> new IllegalArgumentException("Board not found: " + replyId));
 		
+		Board board = reply.getBoard();
+		
 		ReplyReply replyreply = new ReplyReply();
 		replyreply.setContent(replyReplyWriteDto.getContent());
 		replyreply.setUser(user);
@@ -42,6 +49,9 @@ public class ReplyReplyService {
 		replyreply.setCreateDate(Timestamp.valueOf(LocalDateTime.now()));
 
 		replyReplyRepository.save(replyreply);
+		
+		board.setReplyCnt(board.getReplyCnt() + 1);
+		boardRepository.save(board);
 	}
 	
 	@Transactional
@@ -53,6 +63,14 @@ public class ReplyReplyService {
 			throw new IllegalArgumentException("본인의 글만 삭제할 수 있습니다.");
 		}
 		
+		// board 찾기
+		Reply reply = replyRepository.findById(replyreply.getReply().getId())
+                .orElseThrow(() -> new IllegalArgumentException("Reply not found"));
+        Board board = reply.getBoard();
+		
 		replyReplyRepository.delete(replyreply);
+		
+		board.setReplyCnt(Math.max(0, board.getReplyCnt() - 1));
+	    boardRepository.save(board);
 	}
 }
