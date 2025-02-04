@@ -157,7 +157,8 @@ public class BoardService {
 	        if (existingLike.isPresent()) { // isPresent: Optional 클래스에서 제공하는 메서드로 객체의 값이 존재하는지 확인
 	            // 좋아요 취소
 	            likeRepository.delete(existingLike.get());
-	            board.setLikes(board.getLikes() - 1);
+	            //board.setLikes(board.getLikes() - 1);
+	            boardRepository.decrementLikes(boardId); // 좋아요 수 감소 (원자적_UPDATE)
 	            
 	            //return false; // 좋아요 취소
 	        } else {
@@ -166,7 +167,8 @@ public class BoardService {
 	            like.setUser(user);
 	            like.setBoard(board);
 	            likeRepository.save(like);
-	            board.setLikes(board.getLikes() + 1);
+	            //board.setLikes(board.getLikes() + 1);
+	            boardRepository.incrementLikes(boardId); // 좋아요 수 증가 (원자적_UPDATE)
 	            
 	            //return true; // 좋아요 추가
 	        }
